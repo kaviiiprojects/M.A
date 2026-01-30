@@ -957,9 +957,12 @@ export default function POSPage() {
                             type="text"
                             placeholder="Name"
                             value={nameInput}
-                            disabled={mobileInput.length !== 10}
+                            disabled={mobileInput.length !== 10 || selectedCustomer !== null}
                             onChange={(e) => setNameInput(e.target.value)}
-                             className="w-full bg-transparent border-b border-zinc-200 py-1.5 text-sm outline-none placeholder:text-zinc-300 placeholder:uppercase placeholder:tracking-wider focus:border-black transition-colors focus:placeholder-transparent disabled:opacity-30 disabled:cursor-not-allowed uppercase"
+                             className={cn(
+                                "w-full bg-transparent border-b border-zinc-200 py-1.5 text-sm outline-none placeholder:text-zinc-300 placeholder:uppercase placeholder:tracking-wider focus:border-black transition-colors focus:placeholder-transparent disabled:opacity-50 disabled:cursor-not-allowed uppercase",
+                                selectedCustomer && "text-zinc-600"
+                             )}
                         />
                     </div>
 

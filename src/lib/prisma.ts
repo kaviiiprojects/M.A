@@ -11,6 +11,10 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter: new PrismaNeon({ connectionString }),
+    transactionOptions: {
+      maxWait: 10000, // 10 seconds max wait to start transaction
+      timeout: 30000, // 30 seconds max transaction duration
+    },
   });
 
 if (process.env.NODE_ENV !== "production") {
