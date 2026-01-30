@@ -230,6 +230,12 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
                          <span>Paid:</span>
                         <span>{formatPrice(invoice.amountPaid).replace('Rs. ', '')}</span>
                     </div>
+                     {invoice.changeGiven && invoice.changeGiven > 0 && (
+                        <div className="flex justify-between text-[10px]">
+                             <span>Change Given:</span>
+                            <span>{formatPrice(invoice.changeGiven).replace('Rs. ', '')}</span>
+                        </div>
+                    )}
                      <div className="flex justify-between text-[10px]">
                          <span>Balance:</span>
                         <span>{formatPrice(invoice.balanceDue).replace('Rs. ', '')}</span>
