@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CartItem, CustomCartItem } from '@/app/pos/page';
+import type { CartItem as CartItemType, CustomCartItem } from '@/app/pos/page';
 import { getItemPrice, safeRound } from '@/app/pos/page';
 import { WithId } from "@/lib/data";
 import type { Product } from '@/lib/data';
 
 type CartItemProps = {
-    item: CartItem;
-    onUpdate: (cartId: string, updates: Partial<CartItem>) => void;
+    item: CartItemType;
+    onUpdate: (cartId: string, updates: Partial<CartItemType>) => void;
     onRemove: (cartId: string) => void;
     formatPrice: (price: number) => string;
     customNameInputRef: React.RefObject<HTMLInputElement> | null;
@@ -25,7 +25,7 @@ export const CartItem = React.memo(function CartItem({ item, onUpdate, onRemove,
     const lineTotal = safeRound(discountedPricePerUnit * item.quantity);
     const isCustom = item.type === 'custom';
 
-    const handleInputChange = (field: keyof CartItem, value: string | number) => {
+    const handleInputChange = (field: keyof CartItemType, value: string | number) => {
         onUpdate(item.cartId, { [field]: value });
     };
 
@@ -63,7 +63,7 @@ export const CartItem = React.memo(function CartItem({ item, onUpdate, onRemove,
                         className="w-full text-right text-sm font-mono bg-transparent border-b border-transparent hover:border-zinc-200 focus:border-black outline-none transition-colors p-0"
                         placeholder="0.00"
                         value={(item as CustomCartItem).unitPrice || ''}
-                        onChange={(e) => handleInputChange('unitPrice', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => onUpdate(item.cartId, { unitPrice: parseFloat(e.target.value) || 0 } as Partial<CartItemType>)}
                         onKeyDown={(e) => ["-", "e"].includes(e.key) && e.preventDefault()}
                         min="0"
                     />

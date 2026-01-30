@@ -54,13 +54,17 @@ export async function GET() {
       };
     }).filter(inv => inv.date !== null); // Filter out any invoices with invalid dates
 
-    // Total Revenue = amountPaid - changeGiven (net cash actually received)
-    const totalRevenue = processedInvoices.reduce((acc, inv) => acc + inv.amountPaid - (inv.changeGiven || 0), 0);
+    // Total Revenue = sum of all invoice totals (expected/estimated sales revenue)
+    // This uses invoice.total so that unpaid invoices count once when created,
+    // and settlements don't double-count
+    const totalRevenue = processedInvoices.reduce((acc, inv) => acc + inv.total, 0);
 
     // To calculate "Today's Revenue", we need to define "today" in SL time
     const todayStartInSL = startOfDay(toZonedTime(now, SL_TZ));
     const todayEndInSL = endOfDay(toZonedTime(now, SL_TZ));
 
+    // Today's Revenue = actual cash received today (amountPaid - changeGiven)
+    // This shows the actual money collected today from invoices created today
     const todaysRevenue = processedInvoices
       .filter(inv => {
         // Convert the invoice's UTC date to SL time for comparison

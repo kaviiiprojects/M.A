@@ -110,7 +110,7 @@ export default function POSPage() {
   const [vehicleInput, setVehicleInput] = useState('');
   const [isCustomerLoading, setIsCustomerLoading] = useState(false);
   const [isVehicleSelect, setIsVehicleSelect] = useState(false); // Toggle between Select and Input for vehicle
-  const [sendSmsNotification, setSendSmsNotification] = useState(false); // SMS notification checkbox
+  const [sendSmsNotification, setSendSmsNotification] = useState(true); // SMS notification checkbox - default checked
   
   // Clean inputs when payment completes or resets
   const resetCustomerInputs = useCallback(() => {

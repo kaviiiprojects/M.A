@@ -83,7 +83,7 @@ export function CartTotals({
         </ScrollArea>
       </div>
 
-      <div className="p-10 bg-white z-20 border-t border-zinc-100">
+      <div className="px-10 py-5 bg-white z-20 border-t border-zinc-100">
         <div className="space-y-3 mb-6">
           <div className="flex justify-between items-center text-sm">
             <span className="text-zinc-500">Subtotal</span>

@@ -144,7 +144,8 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
     }
   };
   
-  const isFullyPaid = invoice.paymentStatus === 'Paid' && invoice.balanceDue === 0;
+  // Invoice is fully paid if balanceDue is 0 or less (change given case)
+  const isFullyPaid = invoice.balanceDue <= 0;
 
 
 
