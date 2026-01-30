@@ -162,56 +162,56 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
         
         {/* --- Hidden 80mm Receipt Layout --- */}
         <div className="absolute top-0 left-0 w-0 h-0 overflow-hidden">
-             <div ref={receiptRef} className="receipt-print w-[80mm] p-2 mx-auto bg-white text-[11px] font-mono leading-tight">
+             <div ref={receiptRef} className="receipt-print w-[72mm] p-1 mx-auto bg-white text-[9px] font-mono leading-tight">
                 {/* Header */}
-                <div className="text-center mb-4">
-                     <img src="/logo.png" alt="Mahesh Auto" className="h-12 w-auto mx-auto mb-2 object-contain" />
-                     <p className="font-bold text-lg uppercase mb-1">Mahesh Auto Accessories</p>
-                     <p className="text-[10px] mb-1">No. 172/, Nattandiya Rd, Dankotuwa</p>
-                     <p className="text-[10px]">077-6050787 / 031-2259699</p>
-                     <Separator className="my-2 border-black"/>
-                     <p className="font-bold text-sm">INVOICE: {invoice.invoiceNumber}</p>
-                     <p>{formatDateInSL(invoice.date)}</p>
+                <div className="text-center mb-3">
+                     <img src="/logo.png" alt="Mahesh Auto" className="h-10 w-auto mx-auto mb-1 object-contain" />
+                     <p className="font-bold text-sm uppercase mb-0.5">Mahesh Auto Accessories</p>
+                     <p className="text-[8px] mb-0.5">No. 172/, Nattandiya Rd, Dankotuwa</p>
+                     <p className="text-[8px]">077-6050787 / 031-2259699</p>
+                     <Separator className="my-1.5 border-black"/>
+                     <p className="font-bold text-[10px]">INVOICE: {invoice.invoiceNumber}</p>
+                     <p className="text-[8px]">{formatDateInSL(invoice.date)}</p>
                 </div>
 
                 {/* Info */}
-                <div className="mb-2 space-y-0.5">
+                <div className="mb-1.5 space-y-0.5 text-[8px]">
                     <div className="flex justify-between">
                          <span>Customer:</span>
-                         <span className="font-bold">{customer?.name || 'Walk-in'}</span>
+                         <span className="font-bold truncate max-w-[40mm]">{customer?.name || 'Walk-in'}</span>
                     </div>
                      <div className="flex justify-between">
                          <span>Vehicle:</span>
-                         <span className="font-bold">{vehicle?.model || '-'}</span>
+                         <span className="font-bold truncate max-w-[40mm]">{vehicle?.model || '-'}</span>
                     </div>
                      <div className="flex justify-between">
                          <span>Job By:</span>
-                         <span className="font-bold">{employee?.name || '-'}</span>
+                         <span className="font-bold truncate max-w-[40mm]">{employee?.name || '-'}</span>
                     </div>
                 </div>
-                 <Separator className="mb-2 border-black"/>
+                 <Separator className="mb-1.5 border-black"/>
 
                 {/* Items */}
-                <div className="mb-3">
-                    <div className="grid grid-cols-12 font-bold mb-1 border-b border-black pb-1">
-                        <div className="col-span-5">ITEM</div>
-                        <div className="col-span-2 text-center">QTY</div>
+                <div className="mb-2 text-[8px]">
+                    <div className="grid grid-cols-12 font-bold mb-0.5 border-b border-black pb-0.5">
+                        <div className="col-span-6">ITEM</div>
+                        <div className="col-span-1 text-center">Q</div>
                         <div className="col-span-2 text-right">DISC</div>
-                        <div className="col-span-3 text-right">TOTAL(Rs)</div>
+                        <div className="col-span-3 text-right">TOTAL</div>
                     </div>
                     {invoice.items.map((item, i) => (
-                        <div key={i} className="grid grid-cols-12 mb-1">
-                            <div className="col-span-5 truncate pr-1">{item.name}</div>
-                            <div className="col-span-2 text-center">{item.quantity}</div>
+                        <div key={i} className="grid grid-cols-12 mb-0.5">
+                            <div className="col-span-6 truncate pr-0.5">{item.name}</div>
+                            <div className="col-span-1 text-center">{item.quantity}</div>
                             <div className="col-span-2 text-right">{item.discount > 0 ? item.discount.toLocaleString() : '-'}</div>
                             <div className="col-span-3 text-right">{item.total.toLocaleString()}</div>
                         </div>
                     ))}
                 </div>
-                 <Separator className="mb-2 border-black"/>
+                 <Separator className="mb-1.5 border-black"/>
 
                 {/* Totals */}
-                <div className="space-y-1 text-right mb-4">
+                <div className="space-y-0.5 text-right mb-3 text-[8px]">
                     <div className="flex justify-between">
                         <span>Subtotal:</span>
                         <span>{formatPrice(invoice.subtotal).replace('Rs. ', '')}</span>
@@ -222,28 +222,28 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
                             <span>-{formatPrice(invoice.globalDiscountAmount).replace('Rs. ', '')}</span>
                         </div>
                     )}
-                    <div className="flex justify-between font-bold text-sm border-t border-black pt-1 mt-1">
-                         <span>TOTAL:</span>
+                    <div className="flex justify-between font-bold text-[10px] border-t border-black pt-0.5 mt-0.5">
+                         <span>TOTAL (Rs):</span>
                         <span>{formatPrice(invoice.total).replace('Rs. ', '')}</span>
                     </div>
-                     <div className="flex justify-between text-[10px] pt-1">
+                     <div className="flex justify-between pt-0.5">
                          <span>Paid:</span>
                         <span>{formatPrice(invoice.amountPaid).replace('Rs. ', '')}</span>
                     </div>
                      {invoice.changeGiven && invoice.changeGiven > 0 && (
-                        <div className="flex justify-between text-[10px]">
-                             <span>Change Given:</span>
+                        <div className="flex justify-between">
+                             <span>Change:</span>
                             <span>{formatPrice(invoice.changeGiven).replace('Rs. ', '')}</span>
                         </div>
                     )}
-                     <div className="flex justify-between text-[10px]">
+                     <div className="flex justify-between">
                          <span>Balance:</span>
                         <span>{formatPrice(invoice.balanceDue).replace('Rs. ', '')}</span>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="text-center text-[10px] border-t border-black pt-2 pb-8">
+                <div className="text-center text-[8px] border-t border-black pt-1.5 pb-4">
                     <p>Thank you for your business!</p>
                 </div>
              </div>
@@ -440,14 +440,16 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
             }
             .receipt-print {
               position: fixed !important;
-              left: 50% !important;
+              left: 0 !important;
               top: 0 !important;
-              transform: translateX(-50%) !important;
-              width: 76mm !important;
+              width: 72mm !important;
+              max-width: 72mm !important;
               height: auto !important;
-              overflow: visible !important;
+              overflow: hidden !important;
               background: white !important;
-              margin: 0 auto !important;
+              margin: 0 !important;
+              padding: 2mm !important;
+              font-size: 9px !important;
             }
             #invoice-preview {
               position: absolute;
@@ -467,7 +469,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
           @media print {
             @page {
               size: 80mm auto;
-              margin: 2mm;
+              margin: 4mm;
             }
           }
         `}</style>
