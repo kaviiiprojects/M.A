@@ -166,7 +166,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
                 {/* Header */}
                 <div className="text-center mb-4">
                      <img src="/logo.png" alt="Mahesh Auto" className="h-12 w-auto mx-auto mb-2 object-contain" />
-                     <p className="font-bold text-lg uppercase mb-1">Mahesh Auto</p>
+                     <p className="font-bold text-lg uppercase mb-1">Mahesh Auto Accessories</p>
                      <p className="text-[10px] mb-1">No. 172/, Nattandiya Rd, Dankotuwa</p>
                      <p className="text-[10px]">077-6050787 / 031-2259699</p>
                      <Separator className="my-2 border-black"/>
