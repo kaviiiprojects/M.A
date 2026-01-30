@@ -13,7 +13,7 @@ import type { Invoice, Customer, Vehicle, Employee, Payment } from '@/lib/data';
 import { WithId } from "@/lib/data";
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
-import { Printer, CheckCircle, AlertCircle, Share2, Loader2, ScrollText } from 'lucide-react';
+import { CheckCircle, AlertCircle, Share2, Loader2, ScrollText } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { format as formatTz, toDate } from 'date-fns-tz';
@@ -32,7 +32,6 @@ type DetailsDialogProps = {
   invoice: EnrichedInvoice | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  printOnOpen?: boolean;
   shareOnOpen?: boolean;
   receiptOnOpen?: boolean;
 };
@@ -51,7 +50,7 @@ const statusStyles: Record<EnrichedInvoice['paymentStatus'], string> = {
 };
 
 
-export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpen = false, shareOnOpen = false, receiptOnOpen = false }: DetailsDialogProps) {
+export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpen = false, receiptOnOpen = false }: DetailsDialogProps) {
   const { toast } = useToast();
   const actionTriggered = useRef(false);
   const invoiceContentRef = useRef<HTMLDivElement>(null);
@@ -65,10 +64,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
 
   useEffect(() => {
     if (isOpen && !actionTriggered.current) {
-        if (printOnOpen) {
-            actionTriggered.current = true;
-            setTimeout(() => handlePrint(), 500);
-        } else if (shareOnOpen) {
+        if (shareOnOpen) {
             actionTriggered.current = true;
             setTimeout(() => handleShare(), 500);
         } else if (receiptOnOpen && handlePrintReceipt) {
@@ -79,7 +75,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
     if (!isOpen) {
       actionTriggered.current = false;
     }
-  }, [isOpen, printOnOpen, shareOnOpen, receiptOnOpen, handlePrintReceipt]);
+  }, [isOpen, shareOnOpen, receiptOnOpen, handlePrintReceipt]);
 
   if (!invoice) return null;
 
@@ -87,10 +83,6 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
 
   const formatPrice = (price: number) => {
     return `Rs. ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-  
-  const handlePrint = () => {
-    window.print();
   };
 
   const handleShare = async () => {
@@ -416,10 +408,6 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
                      <ScrollText className="mr-2 h-4 w-4"/>
                      Receipt
                 </Button>
-                <Button onClick={handlePrint} variant="outline" className="rounded-none uppercase tracking-widest text-xs h-11">
-                    <Printer className="mr-2 h-4 w-4"/>
-                    Print
-                </Button>
             </div>
         </DialogFooter>
 
@@ -431,9 +419,6 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
             }
             body * {
               visibility: hidden;
-            }
-            #invoice-printable-area, #invoice-printable-area * {
-              visibility: visible;
             }
             .receipt-print, .receipt-print * {
               visibility: visible !important;
@@ -450,19 +435,6 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
               margin: 0 !important;
               padding: 2mm !important;
               font-size: 9px !important;
-            }
-            #invoice-preview {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
-              border: none;
-              box-shadow: none;
-              border-radius: 0;
-              max-width: 100%;
-              padding: 0;
-              margin: 0;
             }
           }
           
