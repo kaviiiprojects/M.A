@@ -5,7 +5,7 @@ import type { Product, Service, Employee, Customer, Vehicle, Invoice, Payment, V
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { Search, UserPlus, Car, Bike, Truck, Sparkles, Loader2, Archive, PlusCircle } from 'lucide-react';
+import { Search, UserPlus, Car, Bike, Truck, Sparkles, Loader2, Archive, PlusCircle, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -16,6 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { PaymentDialog } from '@/components/pos/PaymentDialog';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { CartItem as CartItemComponent } from '@/components/pos/CartItem';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -109,6 +110,7 @@ export default function POSPage() {
   const [vehicleInput, setVehicleInput] = useState('');
   const [isCustomerLoading, setIsCustomerLoading] = useState(false);
   const [isVehicleSelect, setIsVehicleSelect] = useState(false); // Toggle between Select and Input for vehicle
+  const [sendSmsNotification, setSendSmsNotification] = useState(false); // SMS notification checkbox
   
   // Clean inputs when payment completes or resets
   const resetCustomerInputs = useCallback(() => {
@@ -714,6 +716,34 @@ export default function POSPage() {
         setLastInvoice(enrichedInvoice);
         setShowInvoiceDialog(true);
 
+        // Send SMS notification if enabled
+        if (sendSmsNotification) {
+            const customerPhone = selectedCustomer?.phone || mobileInput;
+            if (customerPhone && customerPhone.length === 10) {
+                const itemsList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+                const smsMessage = `Thank you for your purchasing at Mahesh Auto Accessories!\n\nInvoice No: ${invoiceData.invoiceNumber}\nBilled Items: ${itemsList}\nTotal: Rs.${totals.total.toLocaleString()}`;
+                
+                try {
+                    await fetch('/api/sms/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            mobile: `94${customerPhone.slice(-9)}`, // Convert to Sri Lankan format
+                            message: smsMessage,
+                            fromFlow: 'Invoice Notification'
+                        })
+                    });
+                    toast({
+                        title: 'SMS Sent',
+                        description: `Notification sent to ${customerPhone}`,
+                    });
+                } catch (smsErr) {
+                    console.error('SMS send failed:', smsErr);
+                    // Don't show error toast - SMS is optional
+                }
+            }
+        }
+
         resetState();
     } catch(err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to save invoice.';
@@ -721,7 +751,7 @@ export default function POSPage() {
     } finally {
         setIsProcessing(false);
     }
-  }, [selectedCustomer, selectedVehicle, selectedEmployees, cart, totals, globalDiscountPercent, resetState, toast, mobileInput, nameInput, vehicleInput]);
+  }, [selectedCustomer, selectedVehicle, selectedEmployees, cart, totals, globalDiscountPercent, resetState, toast, mobileInput, nameInput, vehicleInput, sendSmsNotification]);
   
   const filterButtons: { label: string; value: VehicleCategory | 'all'; icon: React.ElementType }[] = [
     { label: 'All', value: 'all', icon: Sparkles },
@@ -1074,7 +1104,21 @@ export default function POSPage() {
           isProcessButtonDisabled={cart.length === 0 || (!selectedCustomer && (mobileInput.length !== 10 || !nameInput.trim())) || selectedEmployees.length === 0}
         />
         
-
+        {/* SMS Notification Checkbox */}
+        <div className="flex items-center gap-2 px-1 py-2">
+          <Checkbox 
+            id="sms-notification" 
+            checked={sendSmsNotification}
+            onCheckedChange={(checked) => setSendSmsNotification(checked === true)}
+          />
+          <label 
+            htmlFor="sms-notification" 
+            className="text-xs text-zinc-600 cursor-pointer flex items-center gap-1.5"
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            Send SMS notification to customer
+          </label>
+        </div>
           <PaymentDialog
             isOpen={isPaymentDialogOpen}
             onOpenChange={setPaymentDialogOpen}

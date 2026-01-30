@@ -439,13 +439,15 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
               visibility: visible !important;
             }
             .receipt-print {
-              position: absolute !important;
-              left: 0 !important;
+              position: fixed !important;
+              left: 50% !important;
               top: 0 !important;
-              width: 80mm !important;
+              transform: translateX(-50%) !important;
+              width: 76mm !important;
               height: auto !important;
               overflow: visible !important;
               background: white !important;
+              margin: 0 auto !important;
             }
             #invoice-preview {
               position: absolute;
