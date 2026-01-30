@@ -54,7 +54,8 @@ export async function GET() {
       };
     }).filter(inv => inv.date !== null); // Filter out any invoices with invalid dates
 
-    const totalRevenue = processedInvoices.reduce((acc, inv) => acc + inv.amountPaid, 0);
+    // Total Revenue = amountPaid - changeGiven (net cash actually received)
+    const totalRevenue = processedInvoices.reduce((acc, inv) => acc + inv.amountPaid - (inv.changeGiven || 0), 0);
 
     // To calculate "Today's Revenue", we need to define "today" in SL time
     const todayStartInSL = startOfDay(toZonedTime(now, SL_TZ));
@@ -66,7 +67,7 @@ export async function GET() {
         const invoiceDateInSL = toZonedTime(inv.date!, SL_TZ);
         return invoiceDateInSL >= todayStartInSL && invoiceDateInSL <= todayEndInSL;
       })
-      .reduce((acc, inv) => acc + inv.amountPaid, 0);
+      .reduce((acc, inv) => acc + inv.amountPaid - (inv.changeGiven || 0), 0);
 
     const lowStockItems = products.filter(p => p.stock <= p.stockThreshold);
 

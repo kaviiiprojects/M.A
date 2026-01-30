@@ -406,7 +406,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                 </Button>
                 <Button onClick={() => handlePrintReceipt && handlePrintReceipt()} variant="outline" className="rounded-none uppercase tracking-widest text-xs h-11 border-zinc-400 text-zinc-700 hover:bg-zinc-100">
                      <ScrollText className="mr-2 h-4 w-4"/>
-                     Receipt
+                     Print
                 </Button>
             </div>
         </DialogFooter>

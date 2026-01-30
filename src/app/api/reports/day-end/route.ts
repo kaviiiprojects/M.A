@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
         total: true,
         amountPaid: true,
         balanceDue: true,
+        changeGiven: true,
       },
       _count: {
         id: true,
@@ -51,7 +52,10 @@ export async function GET(req: NextRequest) {
     });
 
     const totalRevenue = invoiceAggregates._sum.total?.toNumber() || 0;
-    const totalCashReceived = invoiceAggregates._sum.amountPaid?.toNumber() || 0;
+    const totalAmountPaid = invoiceAggregates._sum.amountPaid?.toNumber() || 0;
+    const totalChangeGiven = invoiceAggregates._sum.changeGiven?.toNumber() || 0;
+    // Net cash received = amount paid - change given back to customers
+    const totalCashReceived = totalAmountPaid - totalChangeGiven;
     const totalOutstanding = invoiceAggregates._sum.balanceDue?.toNumber() || 0;
     const totalInvoices = invoiceAggregates._count.id;
 
@@ -164,6 +168,9 @@ export async function GET(req: NextRequest) {
         paymentSummary[p.method] = safeRound(p._sum.amount.toNumber());
       }
     });
+
+    // Subtract change given from Cash payments (change is only given for cash)
+    paymentSummary.Cash = safeRound(paymentSummary.Cash - totalChangeGiven);
 
     const responsePayload = {
       date: new Date(dateParam).toISOString(), // Return the requested date
