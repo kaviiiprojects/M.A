@@ -436,7 +436,16 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
               visibility: visible;
             }
             .receipt-print, .receipt-print * {
-              visibility: visible;
+              visibility: visible !important;
+            }
+            .receipt-print {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 80mm !important;
+              height: auto !important;
+              overflow: visible !important;
+              background: white !important;
             }
             #invoice-preview {
               position: absolute;
@@ -450,6 +459,13 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
               max-width: 100%;
               padding: 0;
               margin: 0;
+            }
+          }
+          
+          @media print {
+            @page {
+              size: 80mm auto;
+              margin: 2mm;
             }
           }
         `}</style>
