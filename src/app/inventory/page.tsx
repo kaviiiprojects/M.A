@@ -30,7 +30,7 @@ type WithId<T> = T & { id: string };
 const ProductSchema = z.object({
   id: z.string(),
   name: z.string(),
-  sku: z.string(),
+  sku: z.string().nullable(), // SKU is optional in database
   description: z.string().optional().nullable(),
   stock: z.number(),
   stockThreshold: z.number(),
