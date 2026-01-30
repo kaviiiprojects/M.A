@@ -14,9 +14,9 @@ body {
     font-size: 95%;
   }
 
-  @media (max-width: 1200px) {
+  @media (max-width: 1360px) {
     html {
-      font-size: 55%;
+      font-size: 60%;
     }
   }
 
