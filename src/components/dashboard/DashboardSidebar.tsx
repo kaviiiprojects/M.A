@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -37,14 +36,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/components/AuthProvider';
+import type { UserRole } from '@/lib/auth';
 
-export const menuItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/pos', label: 'POS', icon: ShoppingCart },
-  { href: '/invoices', label: 'Invoices', icon: FileText },
-  { href: '/inventory', label: 'Inventory', icon: Package },
-  { href: '/customers', label: 'Customers', icon: Car },
-  { href: '/employees', label: 'Employees', icon: Users },
+// All menu items with role restrictions
+const allMenuItems = [
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] as UserRole[] },
+  { href: '/pos', label: 'POS', icon: ShoppingCart, roles: ['admin', 'user'] as UserRole[] },
+  { href: '/invoices', label: 'Invoices', icon: FileText, roles: ['admin', 'user'] as UserRole[] },
+  { href: '/inventory', label: 'Inventory', icon: Package, roles: ['admin', 'user'] as UserRole[] },
+  { href: '/customers', label: 'Customers', icon: Car, roles: ['admin', 'user'] as UserRole[] },
+  { href: '/employees', label: 'Employees', icon: Users, roles: ['admin'] as UserRole[] },
 ];
 
 const reportMenuItems = [
@@ -57,10 +59,23 @@ const reportMenuItems = [
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const { state, toggleSidebar } = useSidebar();
+  const { user, logout } = useAuth();
   const isCollapsed = state === 'collapsed';
   
   const isReportsActive = reportMenuItems.some(item => pathname === item.href);
   const isSmsActive = pathname === '/sms';
+  
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(item => 
+    user && item.roles.includes(user.role)
+  );
+  
+  // Only admin can see reports
+  const canSeeReports = user?.role === 'admin';
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <Sidebar
@@ -109,52 +124,54 @@ export default function DashboardSidebar() {
           })}
 
 
-          {/* Reports Dropdown Menu */}
-           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  isActive={isReportsActive}
-                  tooltip="Reports"
-                  className={cn(`
-                      h-9 rounded-lg text-xs tracking-tight justify-start
-                      data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground
-                      hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground
-                      text-sidebar-foreground/70 `,
-                      isCollapsed && "justify-center"
-                  )}
+          {/* Reports Dropdown Menu - Admin Only */}
+          {canSeeReports && (
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    isActive={isReportsActive}
+                    tooltip="Reports"
+                    className={cn(`
+                        h-9 rounded-lg text-xs tracking-tight justify-start
+                        data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground
+                        hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground
+                        text-sidebar-foreground/70 `,
+                        isCollapsed && "justify-center"
+                    )}
+                  >
+                    <BarChart2 className="w-4 h-4 shrink-0" />
+                    {!isCollapsed && (
+                      <div className="w-full flex justify-between items-center">
+                          <span>Reports</span>
+                          <ChevronDown className="w-3 h-3" />
+                      </div>
+                    )}
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  side={isCollapsed ? "right" : "bottom"} 
+                  align={isCollapsed ? "start" : "center"}
+                  sideOffset={10}
+                  className="bg-sidebar-background border-sidebar-border text-sidebar-foreground rounded-sm w-48 bg-black"
                 >
-                  <BarChart2 className="w-4 h-4 shrink-0" />
-                  {!isCollapsed && (
-                    <div className="w-full flex justify-between items-center">
-                        <span>Reports</span>
-                        <ChevronDown className="w-3 h-3" />
-                    </div>
-                  )}
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                side={isCollapsed ? "right" : "bottom"} 
-                align={isCollapsed ? "start" : "center"}
-                sideOffset={10}
-                className="bg-sidebar-background border-sidebar-border text-sidebar-foreground rounded-sm w-48 bg-black"
-              >
-                {reportMenuItems.map(item => (
-                    <DropdownMenuItem key={item.href} asChild>
-                        <Link 
-                            href={item.href} 
-                            className={cn(
-                                "cursor-pointer focus:bg-sidebar-accent focus:text-sidebar-accent-foreground",
-                                pathname === item.href && "bg-sidebar-accent"
-                            )}
-                        >
-                            {item.label}
-                        </Link>
-                    </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
+                  {reportMenuItems.map(item => (
+                      <DropdownMenuItem key={item.href} asChild>
+                          <Link 
+                              href={item.href} 
+                              className={cn(
+                                  "cursor-pointer focus:bg-sidebar-accent focus:text-sidebar-accent-foreground",
+                                  pathname === item.href && "bg-sidebar-accent"
+                              )}
+                          >
+                              {item.label}
+                          </Link>
+                      </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          )}
 
           <SidebarMenuItem className="mt-10">
             <SidebarMenuButton
@@ -185,30 +202,31 @@ export default function DashboardSidebar() {
            isCollapsed && 'justify-center'
         )}>
           <Avatar className="h-7 w-7">
-            <AvatarFallback className="text-xs">A</AvatarFallback>
+            <AvatarFallback className="text-xs">
+              {user?.username.charAt(0).toUpperCase() || 'U'}
+            </AvatarFallback>
           </Avatar>
 
           {!isCollapsed && (
             <div className="leading-tight text-sidebar-foreground whitespace-nowrap">
-              <span className="text-xs font-medium">Admin</span>
-              <span className="block text-[10px] text-sidebar-foreground/60">
-                admin@mpos.io
+              <span className="text-xs font-medium capitalize">{user?.username || 'User'}</span>
+              <span className="block text-[10px] text-sidebar-foreground/60 capitalize">
+                {user?.role || 'Guest'}
               </span>
             </div>
           )}
         </div>
 
         <SidebarMenuButton
-          asChild
+          onClick={handleLogout}
+          tooltip={isCollapsed ? "Log Out" : undefined}
           className={cn(
             'h-9 rounded-lg text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground justify-start',
             isCollapsed && 'justify-center'
           )}
         >
-          <Link href="#">
-             <LogOut className="w-4 h-4" />
-             {!isCollapsed && <span>Log Out</span>}
-          </Link>
+          <LogOut className="w-4 h-4" />
+          {!isCollapsed && <span>Log Out</span>}
         </SidebarMenuButton>
 
         {/* Toggle Expand/Collapse Button */}
