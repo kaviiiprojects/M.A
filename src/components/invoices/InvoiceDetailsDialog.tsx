@@ -184,21 +184,27 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, printOnOpe
                          <span>Vehicle:</span>
                          <span className="font-bold">{vehicle?.model || '-'}</span>
                     </div>
+                     <div className="flex justify-between">
+                         <span>Job By:</span>
+                         <span className="font-bold">{employee?.name || '-'}</span>
+                    </div>
                 </div>
                  <Separator className="mb-2 border-black"/>
 
                 {/* Items */}
                 <div className="mb-3">
                     <div className="grid grid-cols-12 font-bold mb-1 border-b border-black pb-1">
-                        <div className="col-span-6">ITEM</div>
+                        <div className="col-span-5">ITEM</div>
                         <div className="col-span-2 text-center">QTY</div>
-                        <div className="col-span-4 text-right">TOTAL</div>
+                        <div className="col-span-2 text-right">DISC</div>
+                        <div className="col-span-3 text-right">TOTAL(Rs)</div>
                     </div>
                     {invoice.items.map((item, i) => (
                         <div key={i} className="grid grid-cols-12 mb-1">
-                            <div className="col-span-6 truncate pr-1">{item.name}</div>
+                            <div className="col-span-5 truncate pr-1">{item.name}</div>
                             <div className="col-span-2 text-center">{item.quantity}</div>
-                            <div className="col-span-4 text-right">{item.total.toLocaleString()}</div>
+                            <div className="col-span-2 text-right">{item.discount > 0 ? item.discount.toLocaleString() : '-'}</div>
+                            <div className="col-span-3 text-right">{item.total.toLocaleString()}</div>
                         </div>
                     ))}
                 </div>
