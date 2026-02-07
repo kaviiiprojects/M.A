@@ -193,11 +193,18 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                                 <div className="col-span-3 text-right">TOTAL</div>
                             </div>
                             {invoice.items.map((item, i) => (
-                                <div key={i} className="grid grid-cols-12 mb-0.5">
-                                    <div className="col-span-6 truncate pr-0.5">{item.name}</div>
-                                    <div className="col-span-1 text-center">{item.quantity}</div>
-                                    <div className="col-span-2 text-right">{item.discount > 0 ? item.discount.toLocaleString() : '-'}</div>
-                                    <div className="col-span-3 text-right">{item.total.toLocaleString()}</div>
+                                <div key={i} className="mb-0.5">
+                                    <div className="grid grid-cols-12">
+                                        <div className="col-span-6 truncate pr-0.5">{item.name}</div>
+                                        <div className="col-span-1 text-center">{item.quantity}</div>
+                                        <div className="col-span-2 text-right">{item.discount > 0 ? item.discount.toLocaleString() : '-'}</div>
+                                        <div className="col-span-3 text-right">{item.total.toLocaleString()}</div>
+                                    </div>
+                                    {item.warrantyMonths && item.warrantyMonths > 0 && (
+                                        <div className="text-[9px] text-left pl-1 italic">
+                                            ✓ {item.warrantyMonths} Month{item.warrantyMonths > 1 ? 's' : ''} Warranty
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
