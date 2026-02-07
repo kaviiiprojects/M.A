@@ -1,0 +1,494 @@
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import type { Product, Service, VehicleCategory } from '@/lib/data';
+import { WithId } from "@/lib/data";
+import { Textarea } from '../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Car, Truck, Bike, Loader2 } from 'lucide-react';
+import { VanIcon } from '../icons/VanIcon';
+import { JeepIcon } from '../icons/JeepIcon';
+
+// --- Schemas ---
+
+const productSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  sku: z.string().optional(),
+  description: z.string().optional(),
+  stockThreshold: z.coerce.number().int().min(0, 'Re-order level cannot be negative'),
+  actualPrice: z.coerce.number().min(0, 'Price cannot be negative'),
+  sellingPrice: z.coerce.number().min(0, 'Price cannot be negative'),
+  barcode: z.string().optional(),
+  warrantyOption: z.enum(['none', '6', '12', 'custom']).default('none'),
+  warrantyMonths: z.coerce.number().int().min(1).optional(),
+}).refine((data) => data.sellingPrice >= data.actualPrice, {
+  message: 'Selling price must be higher than actual price',
+  path: ['sellingPrice'],
+}).refine((data) => {
+  if (data.warrantyOption === 'custom') {
+    return data.warrantyMonths !== undefined && data.warrantyMonths > 0;
+  }
+  return true;
+}, {
+  message: 'Please enter a valid warranty period',
+  path: ['warrantyMonths'],
+});
+
+const serviceSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  price: z.coerce.number().min(0, 'Price cannot be negative'),
+  vehicleCategory: z.enum(["Bike", "Car", "Van", "Jeep", "Lorry"]).optional(),
+});
+
+// --- Types ---
+
+type AddItemDialogProps = {
+  children: React.ReactNode;
+  onUpsertItem: (item: Omit<Product, 'id'> | Omit<Service, 'id'>, type: 'product' | 'service', id?: string) => Promise<boolean>;
+  itemToEdit?: WithId<Product> | WithId<Service> | null;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+};
+
+// --- Component ---
+
+export function AddItemDialog({
+  children,
+  onUpsertItem,
+  itemToEdit,
+  isOpen,
+  onOpenChange
+}: AddItemDialogProps) {
+  
+  const isEditMode = !!itemToEdit;
+  const itemType = itemToEdit ? ('sku' in itemToEdit ? 'product' : 'service') : 'product';
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const productForm = useForm<z.infer<typeof productSchema>>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: '', sku: '', description: '', stockThreshold: 0, actualPrice: 0, sellingPrice: 0, warrantyOption: 'none' as const, warrantyMonths: undefined,
+    },
+  });
+
+  const serviceForm = useForm<z.infer<typeof serviceSchema>>({
+    resolver: zodResolver(serviceSchema),
+    defaultValues: {
+      name: '', description: '', price: 0, vehicleCategory: undefined,
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (isEditMode && itemToEdit) {
+        if ('sku' in itemToEdit) {
+          const product = itemToEdit as WithId<Product>;
+          const warrantyMonths = product.warrantyMonths;
+          let warrantyOption: 'none' | '6' | '12' | 'custom' = 'none';
+          if (warrantyMonths === 6) warrantyOption = '6';
+          else if (warrantyMonths === 12) warrantyOption = '12';
+          else if (warrantyMonths && warrantyMonths > 0) warrantyOption = 'custom';
+          productForm.reset({ ...product, description: product.description || "", sku: product.sku || '', warrantyOption, warrantyMonths: warrantyOption === 'custom' ? warrantyMonths : undefined });
+        } else {
+          serviceForm.reset(itemToEdit as WithId<Service>);
+        }
+      } else {
+        productForm.reset({
+          name: '', sku: '', description: '', stockThreshold: 5, actualPrice: 0, sellingPrice: 0, barcode: '', warrantyOption: 'none' as const, warrantyMonths: undefined,
+        });
+        serviceForm.reset({
+          name: '', description: '', price: 0, vehicleCategory: undefined
+        });
+      }
+    }
+  }, [itemToEdit, isEditMode, productForm, serviceForm, isOpen]);
+
+  const onProductSubmit = async (values: z.infer<typeof productSchema>) => {
+    setIsSubmitting(true);
+    // Calculate final warranty months based on option
+    let finalWarrantyMonths: number | undefined = undefined;
+    if (values.warrantyOption === '6') finalWarrantyMonths = 6;
+    else if (values.warrantyOption === '12') finalWarrantyMonths = 12;
+    else if (values.warrantyOption === 'custom' && values.warrantyMonths) finalWarrantyMonths = values.warrantyMonths;
+    
+    const { warrantyOption, ...restValues } = values;
+    const productData: Omit<Product, 'id'> = {
+      ...restValues,
+      // If SKU is empty string, make it undefined if backend handles it, or just pass empty string?
+      // For now, pass as is, we will update backend to handle optional.
+      // Actually if user leaves it empty, it might be "" string. Zod .optional() allows undefined.
+      // But text input returns "".
+      sku: restValues.sku || '', 
+      warrantyMonths: finalWarrantyMonths,
+      stock: isEditMode && itemToEdit && 'stock' in itemToEdit ? itemToEdit.stock : 0,
+    };
+    try {
+      const success = await onUpsertItem(productData, 'product', itemToEdit?.id);
+      if (success) {
+        onOpenChange(false);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const onServiceSubmit = async (values: z.infer<typeof serviceSchema>) => {
+    setIsSubmitting(true);
+    try {
+      const success = await onUpsertItem(values, 'service', itemToEdit?.id);
+      if (success) {
+        onOpenChange(false);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Prevents form submission on pressing Enter in an input field
+    if (e.key === 'Enter' && e.target instanceof HTMLInputElement && e.target.type !== 'submit') {
+      e.preventDefault();
+    }
+  };
+
+  const commonInputStyles = "rounded-none h-11 text-base";
+  const commonButtonStyles = "rounded-none uppercase tracking-widest text-xs h-11";
+
+  const categoryIcons: Record<VehicleCategory, React.ElementType> = {
+    "Bike": Bike,
+    "Car": Car,
+    "Van": VanIcon,
+    "Jeep": JeepIcon,
+    "Lorry": Truck,
+  };
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogTrigger asChild>{children}</DialogTrigger>
+        <DialogContent className="sm:max-w-lg rounded-none border-zinc-200">
+          <DialogHeader>
+            <DialogTitle className="font-light tracking-tight text-2xl">
+              {isEditMode ? 'Edit Item' : 'Add New Item'}
+            </DialogTitle>
+            <DialogDescription className="text-zinc-500">
+              {isEditMode ? 'Update the details of the selected item.' : 'Add a new product or service to your inventory.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue={itemType} className="mt-4">
+            <TabsList className="grid w-full grid-cols-2 bg-zinc-100 rounded-none h-11">
+              <TabsTrigger 
+                value="product" 
+                disabled={isEditMode && itemType === 'service'} 
+                className="rounded-none data-[state=active]:bg-white data-[state=active]:shadow-none h-full uppercase text-xs tracking-widest"
+              >
+                Product
+              </TabsTrigger>
+              <TabsTrigger 
+                value="service" 
+                disabled={isEditMode && itemType === 'product'} 
+                className="rounded-none data-[state=active]:bg-white data-[state=active]:shadow-none h-full uppercase text-xs tracking-widest"
+              >
+                Service
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="product">
+              <Form {...productForm}>
+                <form onSubmit={productForm.handleSubmit(onProductSubmit)} onKeyDown={handleKeyDown} className="space-y-4 py-4">
+                  <FormField
+                    control={productForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Synthetic Oil 5L" {...field} className={commonInputStyles} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={productForm.control}
+                      name="sku"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SKU (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., OIL-SYN-5L" {...field} className={commonInputStyles} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={productForm.control}
+                      name="stockThreshold"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Re-order Alert Level</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} className={commonInputStyles} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={productForm.control}
+                      name="actualPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cost Price (Rs.)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} className={commonInputStyles}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={productForm.control}
+                      name="sellingPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Selling Price (Rs.)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} className={commonInputStyles}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={productForm.control}
+                      name="barcode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barcode (Opt)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Auto-gen if empty" {...field} className={commonInputStyles}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Warranty Period */}
+                  <FormField
+                    control={productForm.control}
+                    name="warrantyOption"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Warranty Period</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex flex-wrap gap-4"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="none" id="warranty-none" />
+                              <label htmlFor="warranty-none" className="text-sm cursor-pointer">No Warranty</label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="6" id="warranty-6" />
+                              <label htmlFor="warranty-6" className="text-sm cursor-pointer">6 Months</label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="12" id="warranty-12" />
+                              <label htmlFor="warranty-12" className="text-sm cursor-pointer">12 Months</label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="custom" id="warranty-custom" />
+                              <label htmlFor="warranty-custom" className="text-sm cursor-pointer">Custom</label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {productForm.watch('warrantyOption') === 'custom' && (
+                    <FormField
+                      control={productForm.control}
+                      name="warrantyMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Custom Warranty (Months)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="1" 
+                              placeholder="Enter months" 
+                              {...field} 
+                              value={field.value ?? ''} 
+                              className={commonInputStyles} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <FormField
+                      control={productForm.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="e.g., High-performance synthetic oil for modern engines." {...field} className="rounded-none text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                  />
+
+                  <DialogFooter className="mt-6 gap-2">
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline" className={commonButtonStyles}>Cancel</Button>
+                    </DialogClose>
+                    <Button type="submit" className={commonButtonStyles} disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Product')}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </TabsContent>
+
+            <TabsContent value="service">
+              <Form {...serviceForm}>
+                <form onSubmit={serviceForm.handleSubmit(onServiceSubmit)} onKeyDown={handleKeyDown} className="space-y-4 py-4">
+                  <FormField
+                    control={serviceForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Service Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Full Service Package" {...field} className={commonInputStyles}/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                     <FormField
+                        control={serviceForm.control}
+                        name="price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Price (Rs.)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" {...field} className={commonInputStyles} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={serviceForm.control}
+                        name="vehicleCategory"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Vehicle Category (Optional)</FormLabel>
+                             <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className={commonInputStyles}>
+                                    <SelectValue placeholder="Select a category" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="rounded-none border-zinc-200">
+                                   {(["Bike", "Car", "Van", "Jeep", "Lorry"] as VehicleCategory[]).map(cat => {
+                                      const Icon = categoryIcons[cat];
+                                      return (
+                                        <SelectItem key={cat} value={cat}>
+                                          <div className="flex items-center gap-2">
+                                            <Icon className="w-4 h-4 text-zinc-500" />
+                                            <span>{cat}</span>
+                                          </div>
+                                        </SelectItem>
+                                      )
+                                   })}
+                                </SelectContent>
+                              </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                  </div>
+
+                  <FormField
+                    control={serviceForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="e.g., Comprehensive vehicle maintenance including oil change, filter replacement..." {...field} className="rounded-none text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <DialogFooter className="mt-6 gap-2">
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline" className={commonButtonStyles}>Cancel</Button>
+                    </DialogClose>
+                    <Button type="submit" className={commonButtonStyles} disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Service')}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+    
+

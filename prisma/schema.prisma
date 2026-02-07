@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Enums
+enum VehicleCategory {
+  Bike
+  Car
+  Van
+  Jeep
+  Lorry
+}
+
+enum FuelType {
+  Petrol
+  Diesel
+  Hybrid
+  EV
+}
+
+enum Transmission {
+  Auto
+  Manual
+}
+
+enum InvoiceStatus {
+  Paid
+  Partial
+  Unpaid
+}
+
+enum PaymentMethod {
+  Cash
+  Card
+  Cheque
+}
+
+// Models
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  sku            String?  @unique
+  description    String?
+  stock          Int      @default(0)
+  stockThreshold Int      @default(0)
+  // Money fields as Decimal
+  actualPrice    Decimal  @db.Decimal(10, 2) // Default cost for new products
+  sellingPrice   Decimal  @db.Decimal(10, 2)
+  barcode        String?  @unique
+  warrantyMonths Int?     // Optional warranty period in months
+  
+  batches        InventoryBatch[] // FIFO inventory batches
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("products")
+}
+
+// FIFO Inventory Batch - each stock addition creates a new batch
+model InventoryBatch {
+  id           String   @id @default(cuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  initialQuantity Int      @default(0) // Original quantity added in this batch
+  quantity     Int      // Remaining quantity in this batch
+  costPrice    Decimal  @db.Decimal(10, 2) // Purchase cost per unit for this batch
+  purchaseDate DateTime @default(now())
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([productId])
+  @@map("inventory_batches")
+}
+
+model Service {
+  id              String           @id @default(cuid())
+  name            String
+  // Money fields as Decimal
+  price           Decimal          @db.Decimal(10, 2)
+  description     String?
+  vehicleCategory VehicleCategory?
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("services")
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String    @unique
+  
+  // Cleaned up address, nic as per request
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  vehicles  Vehicle[]
+  invoices  Invoice[]
+
+  @@index([phone])
+  @@map("customers")
+}
+
+model Vehicle {
+  id           String        @id @default(cuid())
+  model        String
+  // Cleaned up make, year, mileage, fuelType, transmission as per request
+  
+  lastVisit    DateTime?
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  invoices     Invoice[]
+
+  @@index([customerId])
+  @@map("vehicles")
+}
+
+model Employee {
+  id        String    @id @default(cuid())
+  name      String
+  address   String
+  mobile    String
+  nic       String // National Identity Card
+  notes     String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  invoices  Invoice[] @relation("LegacyEmployeeInvoice")
+  
+  // New Many-to-Many relation
+  workedInvoices Invoice[] @relation("InvoiceEmployees")
+
+  @@map("employees")
+}
+
+model Invoice {
+  id                    String        @id @default(cuid())
+  invoiceNumber         String        @unique
+  date                  DateTime      @default(now())
+  
+  // Money fields as Decimal
+  subtotal              Decimal       @db.Decimal(10, 2)
+  globalDiscountPercent Decimal?      @db.Decimal(10, 2)
+  globalDiscountAmount  Decimal?      @db.Decimal(10, 2)
+  total                 Decimal       @db.Decimal(10, 2)
+  amountPaid            Decimal       @db.Decimal(10, 2)
+  balanceDue            Decimal       @db.Decimal(10, 2)
+  changeGiven           Decimal?      @db.Decimal(10, 2)
+  
+  paymentStatus         InvoiceStatus
+  
+  customerId            String
+  customer              Customer      @relation(fields: [customerId], references: [id])
+  
+  vehicleId             String?
+  vehicle               Vehicle?      @relation(fields: [vehicleId], references: [id])
+  
+  employeeId            String? // Made optional for migration
+  employee              Employee?      @relation("LegacyEmployeeInvoice", fields: [employeeId], references: [id])
+  
+  // New Many-to-Many relation
+  employees             Employee[]    @relation("InvoiceEmployees")
+  
+  items                 InvoiceItem[]
+  payments              Payment[]
+  
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([date])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id             String   @id @default(cuid())
+  name           String
+  quantity       Int
+  
+  // Money fields as Decimal
+  unitPrice      Decimal  @db.Decimal(10, 2)
+  discount       Decimal  @db.Decimal(10, 2)
+  total          Decimal  @db.Decimal(10, 2)
+  costPrice      Decimal? @db.Decimal(10, 2) // Actual cost from FIFO batch at sale time
+  
+  itemId         String? // Optional reference to orginal product/service
+  warrantyMonths Int?    // Warranty period in months (copied from product at invoice time)
+  
+  invoiceId      String
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  method       PaymentMethod
+  
+  // Money fields as Decimal
+  amount       Decimal       @db.Decimal(10, 2)
+  
+  chequeNumber String?
+  bank         String?
+  date         DateTime      @default(now())
+  
+  invoiceId    String
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_settings")
+}
+
+model SmsLog {
+  id            String   @id @default(cuid())
+  transactionId String   @unique
+  mobile        String
+  message       String
+  status        String
+  campaignId    String?  // Changed to String to be safe, or Int if strictly Int
+  cost          Decimal? @db.Decimal(10, 2)
+  
+  recipientName String?  // Optional helper to store who it was sent to (snapshotted)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("sms_logs")
+}

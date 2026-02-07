@@ -1,0 +1,113 @@
+// app/api/vehicles/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/server/db";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const vehicleSchema = z.object({
+  customerId: z.string().min(1),
+  model: z.string().min(1, 'Model is required'),
+});
+
+
+/**
+ * GET /api/vehicles
+ * Returns array of vehicles
+ */
+export async function GET() {
+  try {
+    const vehicles = await db.getAll("vehicles");
+    return NextResponse.json(vehicles, { status: 200 });
+  } catch (err) {
+    console.error("GET /api/vehicles error:", err);
+    return NextResponse.json({ error: "Failed to fetch vehicles" }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/vehicles
+ * Body: JSON vehicle object (without id)
+ * Creates a vehicle and returns created object
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const payload = await req.json();
+    const validation = vehicleSchema.safeParse(payload);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.flatten().fieldErrors }, { status: 400 });
+    }
+
+    const created = await db.create("vehicles", validation.data);
+    return NextResponse.json(created, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/vehicles error:", err);
+    return NextResponse.json({ error: "Failed to create vehicle" }, { status: 500 });
+  }
+}
+
+/**
+ * PUT /api/vehicles
+ * Updates an existing vehicle
+ */
+export async function PUT(req: NextRequest) {
+  try {
+    const payload = await req.json();
+    const { id, ...data } = payload;
+
+    if (!id) {
+      return NextResponse.json({ error: "ID is required for update" }, { status: 400 });
+    }
+
+    // We use .partial() here because not all fields are sent for update
+    const validation = vehicleSchema.partial().safeParse(data);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.flatten().fieldErrors }, { status: 400 });
+    }
+
+    const dataToUpdate = {
+      ...validation.data,
+    };
+
+    const updated = await db.update("vehicles", id, dataToUpdate);
+    return NextResponse.json(updated, { status: 200 });
+
+  } catch (err) {
+    console.error("PUT /api/vehicles error:", err);
+    return NextResponse.json({ error: "Failed to update vehicle" }, { status: 500 });
+  }
+}
+
+
+/**
+ * DELETE /api/vehicles?id=<id>&customerId=<id>
+ * Deletes a vehicle by its ID.
+ * If this is the customer's only vehicle, their record is also deleted.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    const customerId = url.searchParams.get("customerId");
+
+    if (!id || !customerId) {
+      return NextResponse.json({ error: "Vehicle ID and Customer ID are required" }, { status: 400 });
+    }
+
+    // Check how many vehicles this customer has
+    const vehicleCount = await prisma.vehicle.count({
+      where: { customerId }
+    });
+
+    await db.remove("vehicles", id);
+
+    if (vehicleCount === 1) {
+      await db.remove("customers", customerId);
+    }
+
+    return NextResponse.json({ success: true, id }, { status: 200 });
+
+  } catch (err) {
+    console.error("DELETE /api/vehicles error:", err);
+    return NextResponse.json({ error: "Failed to delete vehicle" }, { status: 500 });
+  }
+}
