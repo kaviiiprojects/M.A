@@ -63,7 +63,7 @@ export function BarcodePrintDialog({
         <div className="max-h-[300px] overflow-y-auto border border-zinc-200 bg-zinc-50 p-4">
             <div ref={componentRef} className="flex flex-col items-center bg-white w-full print:w-auto p-4 print:p-0">
                 {Array.from({ length: quantity }).map((_, index) => (
-                    <div key={index} className="flex flex-col items-center text-center pb-8 mb-4 border-b-2 border-dashed border-zinc-200 print:border-none print:mb-0 print:pb-20 print:pt-6 last:border-0 last:mb-0 w-full">
+                    <div key={index} className="flex flex-col items-center text-center pb-8 mb-4 border-b-2 border-dashed border-zinc-200 print:border-none print:mb-0 print:pb-4 print:pt-4 last:border-0 last:mb-0 w-full">
                         <p className="text-xs font-bold uppercase truncate max-w-[200px] mb-1">{productName}</p>
                         <Barcode 
                             value={barcode} 
