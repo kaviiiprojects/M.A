@@ -212,31 +212,31 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
 
                         {/* Totals */}
                         <div className="space-y-0.5 text-right mb-3 text-[10px]">
-                            <div className="flex justify-between">
+                            <div className="flex justify-end">
                                 <span>Subtotal:</span>
                                 <span>{formatPrice(invoice.subtotal).replace('Rs. ', '')}</span>
                             </div>
                             {invoice.globalDiscountAmount > 0 && (
-                                <div className="flex justify-between">
+                                <div className="flex justify-end">
                                     <span>Discount:</span>
                                     <span>-{formatPrice(invoice.globalDiscountAmount).replace('Rs. ', '')}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between font-bold text-[12px] border-t border-black pt-0.5 mt-0.5">
+                            <div className="flex justify-end font-bold text-[12px] border-t border-black pt-0.5 mt-0.5">
                                 <span>TOTAL (Rs):</span>
                                 <span>{formatPrice(invoice.total).replace('Rs. ', '')}</span>
                             </div>
-                            <div className="flex justify-between pt-0.5">
+                            <div className="flex justify-end pt-0.5">
                                 <span>Paid:</span>
                                 <span>{formatPrice(invoice.amountPaid).replace('Rs. ', '')}</span>
                             </div>
                             {invoice.changeGiven && invoice.changeGiven > 0 && (
-                                <div className="flex justify-between">
+                                <div className="flex justify-end">
                                     <span>Change:</span>
                                     <span>{formatPrice(invoice.changeGiven).replace('Rs. ', '')}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between">
+                            <div className="flex justify-end">
                                 <span>Balance:</span>
                                 <span>{formatPrice(invoice.balanceDue).replace('Rs. ', '')}</span>
                             </div>
