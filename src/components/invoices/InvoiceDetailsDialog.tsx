@@ -169,15 +169,15 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
 
                         {/* Info */}
                         <div className="mb-1.5 space-y-0.5 text-[10px]">
-                            <div className="flex justify-between">
+                            <div className="flex ">
                                 <span>Customer:</span>
                                 <span className="font-bold truncate max-w-[40mm]">{customer?.name || 'Walk-in'}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex ">
                                 <span>Vehicle:</span>
                                 <span className="font-bold truncate max-w-[40mm]">{vehicle?.model || '-'}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex ">
                                 <span>Job By:</span>
                                 <span className="font-bold truncate max-w-[40mm]">{employee?.name || '-'}</span>
                             </div>
