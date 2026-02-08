@@ -168,7 +168,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                         </div>
 
                         {/* Info */}
-                        <div className="mb-1.5 space-y-0.5 text-[10px]">
+                        <div className="mb-1.5 space-y-1 text-[10px]">
                             <div className="flex ">
                                 <span>Customer:</span>
                                 <span className="font-bold truncate max-w-[40mm]">{customer?.name || 'Walk-in'}</span>
@@ -211,7 +211,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                         <Separator className="mb-1.5 border-black" />
 
                         {/* Totals */}
-                        <div className="space-y-0.5 text-right mb-3 text-[10px]">
+                        <div className="space-y-1 text-right mb-3 text-[10px]">
                             <div className="flex justify-end">
                                 <span>Subtotal:</span>
                                 <span>{formatPrice(invoice.subtotal).replace('Rs. ', '')}</span>
