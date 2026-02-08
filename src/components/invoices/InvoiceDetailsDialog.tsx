@@ -162,27 +162,34 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                             <p className="font-bold text-base uppercase mb-0.5">Mahesh Auto Accessories</p>
                             <p className="text-[10px] mb-0.5">No. 172/, Nattandiya Rd, Dankotuwa</p>
                             <p className="text-[10px]">077-6050787 / 031-2259699</p>
-                            <Separator className="my-1.5 border-black" />
-                            <p className="font-bold text-[12px]">INVOICE: {invoice.invoiceNumber}</p>
-                            <p className="text-[10px]">{formatDateInSL(invoice.date)}</p>
+                            <Separator className="my-2 border-black" />
+                            <p className="font-bold text-[12px]">INVOICE</p>
                         </div>
 
                         {/* Info */}
                         <div className="mb-1.5 space-y-1 text-[10px]">
-                            <div className="flex ">
+                            <div className="flex gap-2">
+                                <span>Invoice No:</span>
+                                <span className="font-bold">{invoice.invoiceNumber}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <span>Date:</span>
+                                <span className="font-bold">{formatDateInSL(invoice.date)}</span>
+                            </div>
+                            <div className="flex gap-2">
                                 <span>Customer:</span>
                                 <span className="font-bold truncate max-w-[40mm]">{customer?.name || 'Walk-in'}</span>
                             </div>
-                            <div className="flex ">
+                            <div className="flex gap-2">
                                 <span>Vehicle:</span>
                                 <span className="font-bold truncate max-w-[40mm]">{vehicle?.model || '-'}</span>
                             </div>
-                            <div className="flex ">
+                            <div className="flex gap-2">
                                 <span>Job By:</span>
                                 <span className="font-bold truncate max-w-[40mm]">{employee?.name || '-'}</span>
                             </div>
                         </div>
-                        <Separator className="mb-1.5 border-black" />
+                        <div className="mb-4" />
 
                         {/* Items */}
                         <div className="mb-2 text-[10px]">
@@ -208,43 +215,55 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                                 </div>
                             ))}
                         </div>
-                        <Separator className="mb-1.5 border-black" />
+                        <div className="mb-4" />
 
                         {/* Totals */}
-                        <div className="space-y-1 text-right mb-3 text-[10px]">
-                            <div className="flex justify-end">
+                        <div className="w-full flex items-end justify-end">
+                            <div className="space-y-1 text-right mb-3 text-[10px] w-[60%]">
+                            <div className="flex justify-between gap-2  ">
                                 <span>Subtotal:</span>
                                 <span>{formatPrice(invoice.subtotal).replace('Rs. ', '')}</span>
                             </div>
                             {invoice.globalDiscountAmount > 0 && (
-                                <div className="flex justify-end">
+                                <div className="flex justify-between gap-2">
                                     <span>Discount:</span>
                                     <span>-{formatPrice(invoice.globalDiscountAmount).replace('Rs. ', '')}</span>
                                 </div>
                             )}
-                            <div className="flex justify-end font-bold text-[12px] border-t border-black pt-0.5 mt-0.5">
+                            <div className="flex justify-between font-bold text-[12px] border-t border-black pt-0.5 mt-0.5 gap-2">
                                 <span>TOTAL (Rs):</span>
                                 <span>{formatPrice(invoice.total).replace('Rs. ', '')}</span>
                             </div>
-                            <div className="flex justify-end pt-0.5">
+                            <div className="flex justify-between pt-0.5 gap-2">
                                 <span>Paid:</span>
                                 <span>{formatPrice(invoice.amountPaid).replace('Rs. ', '')}</span>
                             </div>
                             {invoice.changeGiven && invoice.changeGiven > 0 && (
-                                <div className="flex justify-end">
+                                <div className="flex justify-between">
                                     <span>Change:</span>
                                     <span>{formatPrice(invoice.changeGiven).replace('Rs. ', '')}</span>
                                 </div>
                             )}
-                            <div className="flex justify-end">
+                            <div className="flex justify-between">
                                 <span>Balance:</span>
                                 <span>{formatPrice(invoice.balanceDue).replace('Rs. ', '')}</span>
                             </div>
                         </div>
+                        </div>
+
+                        {/* Summary */}
+                        <div className="flex justify-between text-[10px] mb-2 px-1">
+                            <span>No of Items: <span className="font-bold">{invoice.items.length}</span></span>
+                            <span>Total Qty: <span className="font-bold">{invoice.items.reduce((sum, item) => sum + item.quantity, 0)}</span></span>
+                        </div>
 
                         {/* Footer */}
-                        <div className="text-center text-[10px] border-t border-black pt-1.5 pb-4">
+                        <div className="text-center text-[10px] pt-2 pb-4">
+                              <p className="text-[9px] text-gray-600 leading-snug px-1 mb-3">
+                                Exchange is Possible within 7 Days. Items need to be in reasonable condition (With package and tags with sale invoice)
+                            </p>
                             <p>Thank you for your business!</p>
+                          
                         </div>
                     </div>
                 </div>
