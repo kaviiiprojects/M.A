@@ -155,19 +155,19 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
 
                 {/* --- Hidden 80mm Receipt Layout --- */}
                 <div className="absolute top-0 left-0 w-0 h-0 overflow-hidden">
-                    <div ref={receiptRef} className="receipt-print w-[72mm] p-1 mx-auto bg-white text-[11px] font-mono leading-tight">
+                    <div ref={receiptRef} className="receipt-print w-[72mm] p-1 mx-auto bg-white text-[13px] font-mono leading-tight">
                         {/* Header */}
                         <div className="text-center mb-3">
                             <img src="/logo.png" alt="Mahesh Auto" className="h-10 w-auto mx-auto mb-1 object-contain" />
                             <p className="font-bold text-base uppercase mb-0.5">Mahesh Auto Accessories</p>
-                            <p className="text-[10px] mb-0.5">No. 172/, Nattandiya Rd, Dankotuwa</p>
-                            <p className="text-[10px]">077-6050787 / 031-2259699</p>
+                            <p className="text-[12px] mb-0.5">No. 172/, Nattandiya Rd, Dankotuwa</p>
+                            <p className="text-[12px]">077-6050787 / 031-2259699</p>
                             <Separator className="my-2 border-black" />
-                            <p className="font-bold text-[12px]">INVOICE</p>
+                            <p className="font-bold text-[14px]">INVOICE</p>
                         </div>
 
                         {/* Info */}
-                        <div className="mb-1.5 space-y-1 text-[10px]">
+                        <div className="mb-1.5 space-y-1 text-[12px]">
                             <div className="flex gap-2">
                                 <span>Invoice No:</span>
                                 <span className="font-bold">{invoice.invoiceNumber}</span>
@@ -192,7 +192,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                         <div className="mb-4" />
 
                         {/* Items */}
-                        <div className="mb-2 text-[10px]">
+                        <div className="mb-2 text-[12px]">
                             <div className="grid grid-cols-12 font-bold mb-0.5 border-b border-black pb-0.5">
                                 <div className="col-span-6">ITEM</div>
                                 <div className="col-span-1 text-center">Q</div>
@@ -208,7 +208,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                                         <div className="col-span-3 text-right">{item.total.toLocaleString()}</div>
                                     </div>
                                     {item.warrantyMonths && item.warrantyMonths > 0 && (
-                                        <div className="text-[9px] text-left pl-1 italic">
+                                        <div className="text-[11px] text-left pl-1 italic">
                                             ✓ {item.warrantyMonths} Month{item.warrantyMonths > 1 ? 's' : ''} Warranty
                                         </div>
                                     )}
@@ -219,7 +219,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
 
                         {/* Totals */}
                         <div className="w-full flex items-end justify-end">
-                            <div className="space-y-1 text-right mb-3 text-[10px] w-[60%]">
+                            <div className="space-y-1 text-right mb-3 text-[12px] w-[60%]">
                             <div className="flex justify-between gap-2  ">
                                 <span>Subtotal:</span>
                                 <span>{formatPrice(invoice.subtotal).replace('Rs. ', '')}</span>
@@ -252,14 +252,14 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
                         </div>
 
                         {/* Summary */}
-                        <div className="flex justify-between text-[10px] mb-2 px-1">
+                        <div className="flex justify-between text-[12px] mb-2 px-1">
                             <span>No of Items: <span className="font-bold">{invoice.items.length}</span></span>
                             <span>Total Qty: <span className="font-bold">{invoice.items.reduce((sum, item) => sum + item.quantity, 0)}</span></span>
                         </div>
 
                         {/* Footer */}
-                        <div className="text-center text-[10px] pt-2 pb-4">
-                              <p className="text-[9px] text-gray-600 leading-snug px-1 mb-3">
+                        <div className="text-center text-[12px] pt-2 pb-4">
+                              <p className="text-[11px] text-gray-600 leading-snug px-1 mb-3">
                                 Exchange is Possible within 7 Days. Items need to be in reasonable condition (With package and tags with sale invoice)
                             </p>
                             <p>Thank you for your business!</p>
@@ -462,7 +462,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
               background: white !important;
               margin: 0 !important;
               padding: 2mm !important;
-              font-size: 12px !important;
+              font-size: 14px !important;
             }
           }
           
