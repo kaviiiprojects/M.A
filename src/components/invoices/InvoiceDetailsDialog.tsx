@@ -259,9 +259,7 @@ export function InvoiceDetailsDialog({ invoice, isOpen, onOpenChange, shareOnOpe
 
                         {/* Footer */}
                         <div className="text-center text-[12px] pt-2 pb-4">
-                              <p className="text-[11px] text-gray-600 leading-snug px-1 mb-3">
-                                Exchange is Possible within 7 Days. Items need to be in reasonable condition (With package and tags with sale invoice)
-                            </p>
+                        
                             <p>Thank you for your business!</p>
                           
                         </div>
